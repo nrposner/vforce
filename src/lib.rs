@@ -19,48 +19,169 @@ mod sealed {
 
 pub trait AccelerateFloat: sealed::Sealed + Copy {
     // Binary operations (out, a, b, count)
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_pow(out: *mut Self, exp: *const Self, base: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_div(out: *mut Self, numerator: *const Self, denominator: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_copysign(out: *mut Self, magnitude: *const Self, sign: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_fmod(out: *mut Self, numerator: *const Self, denominator: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_remainder(out: *mut Self, numerator: *const Self, denominator: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_nextafter(out: *mut Self, input: *const Self, direction: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_atan2(out: *mut Self, y: *const Self, x: *const Self, count: *const i32);
 
     // Unary operations (out, input, count)
+
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_ceil(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_floor(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_fabs(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_int(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_nint(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_rsqrt(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_sqrt(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_rec(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_exp(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_exp2(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_expm1(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_log(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_log1p(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_log2(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_log10(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_logb(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_sin(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_sinpi(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_cos(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_cospi(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_tan(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_tanpi(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_asin(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_acos(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_atan(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_sinh(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_cosh(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_tanh(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_asinh(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_acosh(out: *mut Self, input: *const Self, count: *const i32);
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_atanh(out: *mut Self, input: *const Self, count: *const i32);
 
-    // Special: sincos (sin_out, cos_out, input, count)
+    // Special: sincos (sin_out, cos_out, input, coun
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_sincos(sin_out: *mut Self, cos_out: *mut Self, input: *const Self, count: *const i32);
 }
 
@@ -545,6 +666,20 @@ binary_vforce_op!(
     /// Computes the two-argument arctangent atan2(y, x), overwriting `y` with the results.
     ///
     /// The signs of both arguments are used to determine the quadrant of the calculated value.
+    /// The following special values of x and y produce the given value of z:
+    ///
+    /// y      |   x  |   result
+    /// +/-0   |  -0  |   +/-pi
+    /// +/-0   |  +0  |   +/-0
+    /// +/-0   |  <0  |   +/-pi
+    /// +/-0   |  >0  |   +/-0
+    ///  >0    | +/-0 |   +pi/2
+    ///  <0    | +/-0 |   -pi/2
+    /// +/-y   | -inf |   +/-pi
+    /// +/-y   | +inf |   +/-0
+    /// +/-inf |   x  |   +/-pi/2
+    /// +/-inf | -inf |   +/-3pi/4
+    /// +/-inf | +inf |   +/-pi/4
     atan2_array_in_place,
     accelerate_atan2, y, x);
 
@@ -628,7 +763,7 @@ unary_vforce_op!(
     atanh_array_in_place,
     accelerate_atanh, input);
 
-// ── Special: sincos ──
+// ── Special: sincos and vvcosisin ──
 
 /// Computes the sine and cosine of each element simultaneously, writing the results
 /// to `sin_out` and `cos_out` respectively.

@@ -776,3 +776,402 @@ pub fn sincos_array<AF: AccelerateFloat>(
     unsafe { AF::accelerate_sincos(sin_out.as_mut_ptr(), cos_out.as_mut_ptr(), input.as_ptr(), &count); }
     Ok(())
 }
+
+#[cfg(test)]
+extern crate alloc;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::vec;
+    use alloc::vec::Vec;
+
+    const INPUTS: [f64; 4] = [0.5, 1.0, 2.0, 3.5];
+    const POSITIVE: [f64; 4] = [0.25, 0.5, 1.0, 4.0];
+    const UNIT: [f64; 3] = [0.0, 0.25, -0.5];
+    const SMALL: [f64; 3] = [0.1, -0.3, 0.9];
+
+    fn assert_approx(actual: &[f64], expected: &[f64], tol: f64, name: &str) {
+        assert_eq!(actual.len(), expected.len(), "{name}: length mismatch");
+        for (i, (&a, &e)) in actual.iter().zip(expected.iter()).enumerate() {
+            assert!(
+                (a - e).abs() < tol,
+                "{name}[{i}]: got {a}, expected {e}, diff {}",
+                (a - e).abs()
+            );
+        }
+    }
+
+    fn assert_approx_f32(actual: &[f32], expected: &[f32], tol: f32, name: &str) {
+        assert_eq!(actual.len(), expected.len(), "{name}: length mismatch");
+        for (i, (&a, &e)) in actual.iter().zip(expected.iter()).enumerate() {
+            assert!(
+                (a - e).abs() < tol,
+                "{name}[{i}]: got {a}, expected {e}, diff {}",
+                (a - e).abs()
+            );
+        }
+    }
+
+    // Helper to test a unary out-of-place function against a scalar reference
+    fn check_unary(
+        vforce_fn: fn(&mut [f64], &[f64]) -> Result<(), AccelerateError>,
+        scalar_fn: fn(f64) -> f64,
+        inputs: &[f64],
+        name: &str,
+    ) {
+        let mut out = vec![0.0f64; inputs.len()];
+        vforce_fn(&mut out, inputs).unwrap();
+        let expected: Vec<f64> = inputs.iter().map(|&x| scalar_fn(x)).collect();
+        assert_approx(&out, &expected, 1e-10, name);
+    }
+
+    // Helper to test a unary in-place function against a scalar reference
+    fn check_unary_in_place(
+        vforce_fn: fn(&mut [f64]) -> Result<(), AccelerateError>,
+        scalar_fn: fn(f64) -> f64,
+        inputs: &[f64],
+        name: &str,
+    ) {
+        let mut buf: Vec<f64> = inputs.to_vec();
+        vforce_fn(&mut buf).unwrap();
+        let expected: Vec<f64> = inputs.iter().map(|&x| scalar_fn(x)).collect();
+        assert_approx(&buf, &expected, 1e-10, name);
+    }
+
+    // Helper to test a binary out-of-place function against a scalar reference
+    #[allow(clippy::type_complexity)]
+    fn check_binary(
+        vforce_fn: fn(&mut [f64], &[f64], &[f64]) -> Result<(), AccelerateError>,
+        scalar_fn: fn(f64, f64) -> f64,
+        a: &[f64],
+        b: &[f64],
+        name: &str,
+    ) {
+        let mut out = vec![0.0f64; a.len()];
+        vforce_fn(&mut out, a, b).unwrap();
+        let expected: Vec<f64> = a.iter().zip(b.iter()).map(|(&x, &y)| scalar_fn(x, y)).collect();
+        assert_approx(&out, &expected, 1e-10, name);
+    }
+
+    // Helper to test a binary in-place function against a scalar reference
+    fn check_binary_in_place(
+        vforce_fn: fn(&mut [f64], &[f64]) -> Result<(), AccelerateError>,
+        scalar_fn: fn(f64, f64) -> f64,
+        a: &[f64],
+        b: &[f64],
+        name: &str,
+    ) {
+        let mut buf: Vec<f64> = a.to_vec();
+        vforce_fn(&mut buf, b).unwrap();
+        let expected: Vec<f64> = a.iter().zip(b.iter()).map(|(&x, &y)| scalar_fn(x, y)).collect();
+        assert_approx(&buf, &expected, 1e-10, name);
+    }
+
+    // ── Power functions ──
+
+    #[test]
+    fn test_pow_array() {
+        let bases = [2.0, 3.0, 4.0, 5.0];
+        let exponents = [3.0, 2.0, 0.5, 1.0];
+        check_binary(pow_array, f64::powf, &bases, &exponents, "pow_array");
+        check_binary_in_place(pow_array_in_place, f64::powf, &bases, &exponents, "pow_array_in_place");
+    }
+
+    // ── Arithmetic and Auxiliary functions ──
+
+    #[test]
+    fn test_div_array() {
+        let num = [10.0, 9.0, 8.0, 7.0];
+        let den = [2.0, 3.0, 4.0, 0.5];
+        check_binary(div_array, |a, b| a / b, &num, &den, "div_array");
+        check_binary_in_place(div_array_in_place, |a, b| a / b, &num, &den, "div_array_in_place");
+    }
+
+    #[test]
+    fn test_copysign_array() {
+        let mag = [1.0, -2.0, 3.0, -4.0];
+        let sign = [-1.0, 1.0, -1.0, 1.0];
+        check_binary(copysign_array, f64::copysign, &mag, &sign, "copysign_array");
+        check_binary_in_place(copysign_array_in_place, f64::copysign, &mag, &sign, "copysign_array_in_place");
+    }
+
+    #[test]
+    fn test_fmod_array() {
+        let num = [5.5, 7.0, -3.5, 10.0];
+        let den = [2.0, 3.0, 1.5, 3.0];
+        check_binary(fmod_array, |a, b| a % b, &num, &den, "fmod_array");
+        check_binary_in_place(fmod_array_in_place, |a, b| a % b, &num, &den, "fmod_array_in_place");
+    }
+
+    #[test]
+    #[ignore = "stub: no core equivalent for IEEE remainder"]
+    fn test_remainder_array() {
+        todo!("IEEE remainder differs from fmod; needs manual verification");
+    }
+
+    #[test]
+    #[ignore = "stub: no stable core equivalent for nextafter"]
+    fn test_nextafter_array() {
+        todo!("f64::next_up/next_down are not the same as nextafter(x, direction)");
+    }
+
+    #[test]
+    fn test_ceil_array() {
+        let inputs = [-1.5, 0.0, 0.3, 2.7];
+        check_unary(ceil_array, f64::ceil, &inputs, "ceil_array");
+        check_unary_in_place(ceil_array_in_place, f64::ceil, &inputs, "ceil_array_in_place");
+    }
+
+    #[test]
+    fn test_floor_array() {
+        let inputs = [-1.5, 0.0, 0.3, 2.7];
+        check_unary(floor_array, f64::floor, &inputs, "floor_array");
+        check_unary_in_place(floor_array_in_place, f64::floor, &inputs, "floor_array_in_place");
+    }
+
+    #[test]
+    fn test_fabs_array() {
+        let inputs = [-3.5, 0.0, 2.5, -0.1];
+        check_unary(fabs_array, f64::abs, &inputs, "fabs_array");
+        check_unary_in_place(fabs_array_in_place, f64::abs, &inputs, "fabs_array_in_place");
+    }
+
+    #[test]
+    fn test_int_array() {
+        let inputs = [-1.7, 0.0, 0.9, 2.3];
+        check_unary(int_array, f64::trunc, &inputs, "int_array");
+        check_unary_in_place(int_array_in_place, f64::trunc, &inputs, "int_array_in_place");
+    }
+
+    #[test]
+    #[ignore = "stub: vvnint rounding mode for ties may differ from f64::round"]
+    fn test_nint_array() {
+        todo!("vvnint may round ties to even vs f64::round which rounds ties away from zero");
+    }
+
+    #[test]
+    fn test_rsqrt_array() {
+        check_unary(rsqrt_array, |x| 1.0 / x.sqrt(), &POSITIVE, "rsqrt_array");
+        check_unary_in_place(rsqrt_array_in_place, |x| 1.0 / x.sqrt(), &POSITIVE, "rsqrt_array_in_place");
+    }
+
+    #[test]
+    fn test_sqrt_array() {
+        check_unary(sqrt_array, f64::sqrt, &POSITIVE, "sqrt_array");
+        check_unary_in_place(sqrt_array_in_place, f64::sqrt, &POSITIVE, "sqrt_array_in_place");
+    }
+
+    #[test]
+    fn test_rec_array() {
+        check_unary(rec_array, |x| 1.0 / x, &INPUTS, "rec_array");
+        check_unary_in_place(rec_array_in_place, |x| 1.0 / x, &INPUTS, "rec_array_in_place");
+    }
+
+    // ── Exponential and Logarithmic functions ──
+
+    #[test]
+    fn test_exp_array() {
+        check_unary(exp_array, f64::exp, &INPUTS, "exp_array");
+        check_unary_in_place(exp_array_in_place, f64::exp, &INPUTS, "exp_array_in_place");
+    }
+
+    #[test]
+    fn test_exp2_array() {
+        check_unary(exp2_array, f64::exp2, &INPUTS, "exp2_array");
+        check_unary_in_place(exp2_array_in_place, f64::exp2, &INPUTS, "exp2_array_in_place");
+    }
+
+    #[test]
+    fn test_expm1_array() {
+        check_unary(expm1_array, |x| x.exp_m1(), &SMALL, "expm1_array");
+        check_unary_in_place(expm1_array_in_place, |x| x.exp_m1(), &SMALL, "expm1_array_in_place");
+    }
+
+    #[test]
+    fn test_log_array() {
+        check_unary(log_array, f64::ln, &POSITIVE, "log_array");
+        check_unary_in_place(log_array_in_place, f64::ln, &POSITIVE, "log_array_in_place");
+    }
+
+    #[test]
+    fn test_log1p_array() {
+        check_unary(log1p_array, |x| x.ln_1p(), &SMALL, "log1p_array");
+        check_unary_in_place(log1p_array_in_place, |x| x.ln_1p(), &SMALL, "log1p_array_in_place");
+    }
+
+    #[test]
+    fn test_log2_array() {
+        check_unary(log2_array, f64::log2, &POSITIVE, "log2_array");
+        check_unary_in_place(log2_array_in_place, f64::log2, &POSITIVE, "log2_array_in_place");
+    }
+
+    #[test]
+    fn test_log10_array() {
+        check_unary(log10_array, f64::log10, &POSITIVE, "log10_array");
+        check_unary_in_place(log10_array_in_place, f64::log10, &POSITIVE, "log10_array_in_place");
+    }
+
+    #[test]
+    #[ignore = "stub: no core equivalent for logb (exponent extraction)"]
+    fn test_logb_array() {
+        todo!("logb extracts the exponent as a float; no direct core equivalent");
+    }
+
+    // ── Trigonometric functions ──
+
+    #[test]
+    fn test_sin_array() {
+        check_unary(sin_array, f64::sin, &INPUTS, "sin_array");
+        check_unary_in_place(sin_array_in_place, f64::sin, &INPUTS, "sin_array_in_place");
+    }
+
+    #[test]
+    #[ignore = "stub: no core equivalent for sinpi"]
+    fn test_sinpi_array() {
+        todo!("sinpi computes sin(x * pi); no direct core equivalent");
+    }
+
+    #[test]
+    fn test_cos_array() {
+        check_unary(cos_array, f64::cos, &INPUTS, "cos_array");
+        check_unary_in_place(cos_array_in_place, f64::cos, &INPUTS, "cos_array_in_place");
+    }
+
+    #[test]
+    #[ignore = "stub: no core equivalent for cospi"]
+    fn test_cospi_array() {
+        todo!("cospi computes cos(x * pi); no direct core equivalent");
+    }
+
+    #[test]
+    fn test_tan_array() {
+        check_unary(tan_array, f64::tan, &INPUTS, "tan_array");
+        check_unary_in_place(tan_array_in_place, f64::tan, &INPUTS, "tan_array_in_place");
+    }
+
+    #[test]
+    #[ignore = "stub: no core equivalent for tanpi"]
+    fn test_tanpi_array() {
+        todo!("tanpi computes tan(x * pi); no direct core equivalent");
+    }
+
+    #[test]
+    fn test_asin_array() {
+        check_unary(asin_array, f64::asin, &UNIT, "asin_array");
+        check_unary_in_place(asin_array_in_place, f64::asin, &UNIT, "asin_array_in_place");
+    }
+
+    #[test]
+    fn test_acos_array() {
+        check_unary(acos_array, f64::acos, &UNIT, "acos_array");
+        check_unary_in_place(acos_array_in_place, f64::acos, &UNIT, "acos_array_in_place");
+    }
+
+    #[test]
+    fn test_atan_array() {
+        check_unary(atan_array, f64::atan, &INPUTS, "atan_array");
+        check_unary_in_place(atan_array_in_place, f64::atan, &INPUTS, "atan_array_in_place");
+    }
+
+    #[test]
+    fn test_atan2_array() {
+        let y = [1.0, -1.0, 3.0, 0.0];
+        let x = [1.0, 1.0, -2.0, 5.0];
+        check_binary(atan2_array, f64::atan2, &y, &x, "atan2_array");
+        check_binary_in_place(atan2_array_in_place, f64::atan2, &y, &x, "atan2_array_in_place");
+    }
+
+    // ── Hyperbolic functions ──
+
+    #[test]
+    fn test_sinh_array() {
+        check_unary(sinh_array, f64::sinh, &INPUTS, "sinh_array");
+        check_unary_in_place(sinh_array_in_place, f64::sinh, &INPUTS, "sinh_array_in_place");
+    }
+
+    #[test]
+    fn test_cosh_array() {
+        let inputs = [0.0, 0.5, 1.0, 2.0];
+        check_unary(cosh_array, f64::cosh, &inputs, "cosh_array");
+        check_unary_in_place(cosh_array_in_place, f64::cosh, &inputs, "cosh_array_in_place");
+    }
+
+    #[test]
+    fn test_tanh_array() {
+        check_unary(tanh_array, f64::tanh, &INPUTS, "tanh_array");
+        check_unary_in_place(tanh_array_in_place, f64::tanh, &INPUTS, "tanh_array_in_place");
+    }
+
+    #[test]
+    fn test_asinh_array() {
+        check_unary(asinh_array, f64::asinh, &INPUTS, "asinh_array");
+        check_unary_in_place(asinh_array_in_place, f64::asinh, &INPUTS, "asinh_array_in_place");
+    }
+
+    #[test]
+    fn test_acosh_array() {
+        let inputs = [1.0, 1.5, 2.0, 4.0];
+        check_unary(acosh_array, f64::acosh, &inputs, "acosh_array");
+        check_unary_in_place(acosh_array_in_place, f64::acosh, &inputs, "acosh_array_in_place");
+    }
+
+    #[test]
+    fn test_atanh_array() {
+        check_unary(atanh_array, f64::atanh, &UNIT, "atanh_array");
+        check_unary_in_place(atanh_array_in_place, f64::atanh, &UNIT, "atanh_array_in_place");
+    }
+
+    // ── Special: sincos ──
+
+    #[test]
+    fn test_sincos_array() {
+        let mut sin_out = [0.0f64; 4];
+        let mut cos_out = [0.0f64; 4];
+        sincos_array(&mut sin_out, &mut cos_out, &INPUTS).unwrap();
+        let expected_sin: Vec<f64> = INPUTS.iter().map(|&x| x.sin()).collect();
+        let expected_cos: Vec<f64> = INPUTS.iter().map(|&x| x.cos()).collect();
+        assert_approx(&sin_out, &expected_sin, 1e-10, "sincos_array (sin)");
+        assert_approx(&cos_out, &expected_cos, 1e-10, "sincos_array (cos)");
+    }
+
+    // ── f32 spot check ──
+
+    #[test]
+    fn test_f32_sin_array() {
+        let inputs: [f32; 4] = [0.5, 1.0, 2.0, 3.5];
+        let mut out = [0.0f32; 4];
+        sin_array(&mut out, &inputs).unwrap();
+        let expected: Vec<f32> = inputs.iter().map(|&x| x.sin()).collect();
+        assert_approx_f32(&out, &expected, 1e-6, "sin_array (f32)");
+    }
+
+    #[test]
+    fn test_f32_pow_array() {
+        let bases: [f32; 4] = [2.0, 3.0, 4.0, 5.0];
+        let exponents: [f32; 4] = [3.0, 2.0, 0.5, 1.0];
+        let mut out = [0.0f32; 4];
+        pow_array(&mut out, &bases, &exponents).unwrap();
+        let expected: Vec<f32> = bases.iter().zip(exponents.iter()).map(|(&b, &e)| b.powf(e)).collect();
+        assert_approx_f32(&out, &expected, 1e-5, "pow_array (f32)");
+    }
+
+    // ── Error handling ──
+
+    #[test]
+    fn test_length_mismatch() {
+        let mut out = [0.0f64; 3];
+        let input = [1.0f64; 4];
+        let result = sin_array(&mut out, &input);
+        assert!(matches!(result, Err(AccelerateError::LengthMismatch { .. })));
+    }
+
+    #[test]
+    fn test_binary_length_mismatch() {
+        let mut out = [0.0f64; 4];
+        let a = [1.0f64; 4];
+        let b = [2.0f64; 3];
+        let result = pow_array(&mut out, &a, &b);
+        assert!(matches!(result, Err(AccelerateError::LengthMismatch { .. })));
+    }
+}

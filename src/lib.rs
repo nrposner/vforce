@@ -17,6 +17,8 @@ mod sealed {
     impl Sealed for f64 {}
 }
 
+/// Ensures that all inputs to an accelerate function must be the same numeric type: either f64 or
+/// f32
 pub trait AccelerateFloat: sealed::Sealed + Copy {
     // Binary operations (out, a, b, count)
     /// # Safety

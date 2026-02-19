@@ -623,12 +623,12 @@ unary_vforce_op!(
 unary_vforce_op!(
     /// Computes the arccosine of each element, writing the results to `out`.
     ///
-    /// If x is +/-0, the result preserves the signed zero.
+    /// If x is 1, the result is +0.
     /// If |x| > 1, the result is NaN.
     acos_array,
     /// Computes the arccosine of each element, overwriting `input` with the results.
     ///
-    /// If x is +/-0, the result preserves the signed zero.
+    /// If x is 1, the result is +0.
     /// If |x| > 1, the result is NaN.
     acos_array_in_place,
     accelerate_acos, input);
@@ -703,12 +703,12 @@ unary_vforce_op!(
 unary_vforce_op!(
     /// Computes the hyperbolic cosine of each element, writing the results to `out`.
     ///
-    /// If x is +/-0, the result preserves the signed zero.
+    /// If x is +/-0, the result is 1.
     /// If x is +/-inf, the result is +inf.
     cosh_array,
     /// Computes the hyperbolic cosine of each element, overwriting `input` with the results.
     ///
-    /// If x is +/-0, the result preserves the signed zero.
+    /// If x is +/-0, the result is 1.
     /// If x is +/-inf, the result is +inf.
     cosh_array_in_place,
     accelerate_cosh, input);

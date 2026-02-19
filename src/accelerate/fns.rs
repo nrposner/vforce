@@ -148,11 +148,11 @@ unsafe extern "C" {
     pub fn vvasinf(out: *mut f32, input: *const f32, count: *const i32);
 
 
-    /// If x is +/-0, the result preserves the signed zero. 
+    /// If x is 1, the result is +0.
     /// If |x| > 1, the result is NaN.
     pub fn vvacos(out: *mut f64, input: *const f64, count: *const i32);
 
-    /// If x is +/-0, the result preserves the signed zero. 
+    /// If x is 1, the result is +0.
     /// If |x| > 1, the result is NaN.
     pub fn vvacosf(out: *mut f32, input: *const f32, count: *const i32);
 
@@ -211,11 +211,11 @@ unsafe extern "C" {
     /// If x is +/-inf, the result is +/-inf.
     pub fn vvsinhf(out: *mut f32, input: *const f32, count: *const i32);
 
-    /// If x is +/-0, the result preserves the signed zero.
+    /// If x is +/-0, the result is 1.
     /// If x is +/-inf, the result is +inf.
     pub fn vvcosh(out: *mut f64, input: *const f64, count: *const i32);
 
-    /// If x is +/-0, the result preserves the signed zero.
+    /// If x is +/-0, the result is 1.
     /// If x is +/-inf, the result is +inf.
     pub fn vvcoshf(out: *mut f32, input: *const f32, count: *const i32);
 

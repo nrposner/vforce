@@ -24,7 +24,7 @@ pub trait AccelerateFloat: sealed::Sealed + Copy {
     /// # Safety
     /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
     /// type, either f64 or f32, and all arrays must be of length 'count'
-    unsafe fn accelerate_pow(out: *mut Self, exp: *const Self, base: *const Self, count: *const i32);
+    unsafe fn accelerate_pow(out: *mut Self, base: *const Self, exp: *const Self, count: *const i32);
     /// # Safety
     /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
     /// type, either f64 or f32, and all arrays must be of length 'count'
@@ -197,7 +197,7 @@ macro_rules! impl_accelerate_float {
      $acos:ident, $atan:ident, $sinh:ident, $cosh:ident, $tanh:ident,
      $asinh:ident, $acosh:ident, $atanh:ident, $sincos:ident) => {
         impl AccelerateFloat for $ty {
-            unsafe fn accelerate_pow(out: *mut Self, exp: *const Self, base: *const Self, count: *const i32) 
+            unsafe fn accelerate_pow(out: *mut Self, base: *const Self, exp: *const Self, count: *const i32)
             { unsafe { $pow(out, exp, base, count) } }
             unsafe fn accelerate_div(out: *mut Self, n: *const Self, d: *const Self, count: *const i32) 
             { unsafe { $div(out, n, d, count) } }

@@ -156,14 +156,14 @@ binary_vforce_op!(
 unary_vforce_op!(
     /// Computes the ceiling of each element, writing the results to `out`.
     ceil_array, 
-    /// Computes the ceiling of each element, overwriting `input` with the results 
+    /// Computes the ceiling of each element, overwriting `input` with the results.
     ceil_array_in_place, 
     accelerate_ceil, input);
 
 
 
 // /// Equivalent to base = base.powf(exponent)
-// /// can only be used on arrays up to 4_294_967_295 elements long
+// /// can only be used on arrays up to i32::MAX elements long
 // ///
 // /// Will overwrite the 'bases' array with the results of bases ^ exponents
 // /// Providing a safe API over the Accelerate vvpow() function:

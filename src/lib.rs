@@ -139,14 +139,29 @@ fn validate_lengths_2(a: usize, b: usize, c: usize) -> Result<i32, AccelerateErr
 }
 
 
-binary_vforce_op!(pow_array, pow_array_in_place, accelerate_pow, bases, exponents);
-binary_vforce_op!(div_array, div_array_in_place, accelerate_div, numerator, denominator);
+binary_vforce_op!(
+    /// Computes bases ^ exponents, writing the results to `out`.
+    pow_array, 
+    /// Computes bases ^ exponents, overwriting `bases` with the results.
+    pow_array_in_place, 
+    accelerate_pow, bases, exponents);
 
-unary_vforce_op!(ceil_array, ceil_array_in_place, accelerate_ceil, input);
+binary_vforce_op!(
+    /// Computes numerator / denominator, writing the results to `out`.
+    div_array, 
+    /// Computes numerator / denominator, overwriting `numerator` with the results.
+    div_array_in_place, 
+    accelerate_div, numerator, denominator);
+
+unary_vforce_op!(
+    /// Computes the ceiling of each element, writing the results to `out`.
+    ceil_array, 
+    /// Computes the ceiling of each element, overwriting `input` with the results 
+    ceil_array_in_place, 
+    accelerate_ceil, input);
 
 
 
-//
 // /// Equivalent to base = base.powf(exponent)
 // /// can only be used on arrays up to 4_294_967_295 elements long
 // ///

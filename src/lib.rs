@@ -1,7 +1,8 @@
 #![no_std]
+#![cfg(target_os = "macos")]
 mod accelerate;
 
-use accelerate::fns::*;
+use accelerate::{AccelerateComplex, fns::*};
 
 #[derive(Debug, Clone, Copy)]
 pub enum AccelerateError {
@@ -25,9 +26,6 @@ pub trait AccelerateFloat: sealed::Sealed + Copy {
     /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
     /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_pow(out: *mut Self, base: *const Self, exp: *const Self, count: *const i32);
-    /// # Safety
-    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
-    /// type, either f64 or f32, and all arrays must be of length 'count'
     /// # Safety
     /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
     /// type, either f64 or f32, and all arrays must be of length 'count'
@@ -180,11 +178,17 @@ pub trait AccelerateFloat: sealed::Sealed + Copy {
     /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_atanh(out: *mut Self, input: *const Self, count: *const i32);
 
-    // Special: sincos (sin_out, cos_out, input, coun
+    // Special: sincos (sin_out, cos_out, input, count)
     /// # Safety
     /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
     /// type, either f64 or f32, and all arrays must be of length 'count'
     unsafe fn accelerate_sincos(sin_out: *mut Self, cos_out: *mut Self, input: *const Self, count: *const i32);
+
+    // Special: cosisin
+    /// # Safety
+    /// All inputs must point to valid arrays of floating-point numbers. All must be of the same
+    /// type, either f64 or f32, and all arrays must be of length 'count'
+    unsafe fn accelerate_cosisin(out: *mut AccelerateComplex<Self>, input: *const Self, count: *const i32);
 }
 
 macro_rules! impl_accelerate_float {
@@ -195,7 +199,7 @@ macro_rules! impl_accelerate_float {
      $log2:ident, $log10:ident, $logb:ident, $sin:ident, $sinpi:ident,
      $cos:ident, $cospi:ident, $tan:ident, $tanpi:ident, $asin:ident,
      $acos:ident, $atan:ident, $sinh:ident, $cosh:ident, $tanh:ident,
-     $asinh:ident, $acosh:ident, $atanh:ident, $sincos:ident) => {
+     $asinh:ident, $acosh:ident, $atanh:ident, $sincos:ident, $cosisin:ident) => {
         impl AccelerateFloat for $ty {
             unsafe fn accelerate_pow(out: *mut Self, base: *const Self, exp: *const Self, count: *const i32)
             { unsafe { $pow(out, exp, base, count) } }
@@ -276,6 +280,8 @@ macro_rules! impl_accelerate_float {
             { unsafe { $atanh(out, i, count) } }
             unsafe fn accelerate_sincos(s: *mut Self, c: *mut Self, i: *const Self, count: *const i32) 
             { unsafe { $sincos(s, c, i, count) } }
+            unsafe fn accelerate_cosisin(out: *mut AccelerateComplex<Self>, i: *const Self, count: *const i32) 
+            { unsafe { $cosisin(out, i, count) } }
         }
     };
 }
@@ -285,7 +291,7 @@ impl_accelerate_float!(f64,
     vvceil, vvfloor, vvfabs, vvint, vvnint, vvrsqrt, vvsqrt, vvrec,
     vvexp, vvexp2, vvexpm1, vvlog, vvlog1p, vvlog2, vvlog10, vvlogb,
     vvsin, vvsinpi, vvcos, vvcospi, vvtan, vvtanpi, vvasin, vvacos, vvatan,
-    vvsinh, vvcosh, vvtanh, vvasinh, vvacosh, vvatanh, vvsincos
+    vvsinh, vvcosh, vvtanh, vvasinh, vvacosh, vvatanh, vvsincos, vvcosisin
 );
 
 impl_accelerate_float!(f32,
@@ -293,9 +299,8 @@ impl_accelerate_float!(f32,
     vvceilf, vvfloorf, vvfabsf, vvintf, vvnintf, vvrsqrtf, vvsqrtf, vvrecf,
     vvexpf, vvexp2f, vvexpm1f, vvlogf, vvlog1pf, vvlog2f, vvlog10f, vvlogbf,
     vvsinf, vvsinpif, vvcosf, vvcospif, vvtanf, vvtanpif, vvasinf, vvacosf, vvatanf,
-    vvsinhf, vvcoshf, vvtanhf, vvasinhf, vvacoshf, vvatanhf, vvsincosf
+    vvsinhf, vvcoshf, vvtanhf, vvasinhf, vvacoshf, vvatanhf, vvsincosf, vvcosisinf
 );
-
 
 // todo:
 // check what accelerate does if we pass in count = 0
@@ -774,6 +779,36 @@ pub fn sincos_array<AF: AccelerateFloat>(
 ) -> Result<(), AccelerateError> {
     let count = validate_lengths_2(input.len(), sin_out.len(), cos_out.len())?;
     unsafe { AF::accelerate_sincos(sin_out.as_mut_ptr(), cos_out.as_mut_ptr(), input.as_ptr(), &count); }
+    Ok(())
+}
+/// Computes the sine and cosine of each element simultaneously, writing the `sin` results into
+/// `input` and the `cos` results into `cos_out`
+pub fn sincos_array_in_place_sin<AF: AccelerateFloat>(
+    cos_out: &mut [AF], input: &mut [AF]
+) -> Result<(), AccelerateError> {
+    let count = validate_lengths_1(input.len(), cos_out.len())?;
+    unsafe { AF::accelerate_sincos(input.as_mut_ptr(), cos_out.as_mut_ptr(), input.as_ptr(), &count); }
+    Ok(())
+}
+
+/// Computes the sine and cosine of each element simultaneously, writing the `cos` results into
+/// `input` and the `sin` results into `sin_out`
+pub fn sincos_array_in_place_cos<AF: AccelerateFloat>(
+    sin_out: &mut [AF], input: &mut [AF]
+) -> Result<(), AccelerateError> {
+    let count = validate_lengths_1(input.len(), sin_out.len())?;
+    unsafe { AF::accelerate_sincos(sin_out.as_mut_ptr(), input.as_mut_ptr(), input.as_ptr(), &count); }
+    Ok(())
+}
+
+/// Computes the complex number on the unit circle corresponding to the angle given by each element of a vector.
+///
+/// Does not have an in-place variant, as the output array is necessarily twice the size of the input array.
+pub fn cosisin_array<AF: AccelerateFloat>(
+    out: &mut [AccelerateComplex<AF>], input: &[AF]
+) -> Result<(), AccelerateError> {
+    let count = validate_lengths_1(out.len(), input.len())?;
+    unsafe { AF::accelerate_cosisin(out.as_mut_ptr(), input.as_ptr(), &count); }
     Ok(())
 }
 

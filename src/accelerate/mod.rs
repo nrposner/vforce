@@ -1,12 +1,13 @@
 pub mod fns;
 
 #[repr(C)]
-pub struct ComplexDouble {
-    real: f64,
-    imaginary: f64,
+pub struct AccelerateComplex<T: Copy> {
+    real: T,
+    imaginary: T,
 }
-#[repr(C)]
-pub struct ComplexFloat {
-    real: f32,
-    imaginary: f32,
+
+impl<T: Copy> AccelerateComplex<T> {
+    pub fn unpack(&self) -> (T, T) {
+        (self.real, self.imaginary)
+    }
 }

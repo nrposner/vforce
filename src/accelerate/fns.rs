@@ -1,5 +1,6 @@
 #![allow(clippy::doc_lazy_continuation)]
-use crate::accelerate::{ComplexDouble, ComplexFloat};
+#[cfg(target_os = "macos")]
+use crate::accelerate::AccelerateComplex;
 
 #[cfg(target_os = "macos")]
 unsafe extern "C" {
@@ -116,8 +117,8 @@ unsafe extern "C" {
 
     // todo: provide other complex number support? Maybe an easy way to convert our newtype into
     // another existing complex number type like the num crate's version, num::Complex<f64> etc ??
-    pub fn vvcosisin(out: *mut ComplexDouble, input: *const f64, count: *const i32);
-    pub fn vvcosisinf(out: *mut ComplexFloat, input: *const f64, count: *const i32);
+    pub fn vvcosisin(out: *mut AccelerateComplex<f64>, input: *const f64, count: *const i32);
+    pub fn vvcosisinf(out: *mut AccelerateComplex<f32>, input: *const f32, count: *const i32);
 
 
 

@@ -1,7 +1,10 @@
 #![no_std]
 #![cfg(target_os = "macos")]
+//! Docs go here
+
 mod accelerate;
 
+use core::fmt::Display;
 use accelerate::{AccelerateComplex, fns::*};
 
 #[derive(Debug, Clone, Copy)]
@@ -10,6 +13,19 @@ pub enum AccelerateError {
     LengthMismatch { expected: usize, got: usize },
     /// We get an array that cannot be indexed by i32
     Overflow
+}
+
+impl Display for AccelerateError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Overflow => {
+                write!(f, "AccelerateError::Overflow - vforce recieved an array that cannot be indexed by an i32: please use a shorter array")
+            },
+            Self::LengthMismatch { expected, got } => {
+                write!(f, "AccelerateError::LengthMismatch - vforce recived arrays of different lengths: expected {} elements, got {} elements", expected, got)
+            }
+        }
+    }
 }
 
 mod sealed {

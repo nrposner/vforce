@@ -1,4 +1,4 @@
-//! Safe no_std Rust bindings for VForce family of hardware-accelerated transcendental vectorized math functions in the Apple Accelerate framework on MacOS.
+//! Safe no_std Rust bindings for the VForce family of hardware-accelerated transcendental vectorized math functions in the Accelerate framework on MacOS.
 #![no_std]
 #![cfg(target_os = "macos")]
 

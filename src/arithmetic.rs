@@ -3,8 +3,25 @@ use super::*;
 
 // ── Power functions ──
 
+
 binary_vforce_op!(
     /// Computes bases ^ exponents, writing the results to `out`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use vforce::arithmetic::{pow_array, pow_array_in_place};
+    /// let mut bases: Vec<f64> = vec![1.0, 6.0, 2.5];
+    /// let exponents: Vec<f64> = vec![2.0, 4.0, 1.3];
+    ///
+    /// let mut out = vec![0.0f64; 3];
+    /// // results can be written out to another array:
+    /// pow_array(&mut out, &bases, &exponents).unwrap();
+    /// assert_eq!(out, vec![1.0f64, 1296.0f64, 2.5f64.powf(1.3)]);
+    /// // or overwrite one of the original arrays:
+    /// pow_array_in_place(&mut bases, &exponents).unwrap();
+    /// assert_eq!(bases, vec![1.0f64, 1296.0f64, 2.5f64.powf(1.3)]);
+    /// ```
     pow_array,
     /// Computes bases ^ exponents, overwriting `bases` with the results.
     pow_array_in_place,

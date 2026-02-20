@@ -1,3 +1,4 @@
+//! Groups together trigonometric functions
 use super::*;
 use crate::accelerate::AccelerateComplex;
 

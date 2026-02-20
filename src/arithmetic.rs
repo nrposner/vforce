@@ -1,3 +1,4 @@
+//! Groups together arithmetic and basic numerical functions, including powers
 use super::*;
 
 // ── Power functions ──

@@ -1,3 +1,4 @@
+//! Groups together hyperbolic trigonometric functions
 use super::*;
 
 unary_vforce_op!(

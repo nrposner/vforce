@@ -1,3 +1,4 @@
+//! Groups together exponential functions and logarithms
 use super::*;
 
 unary_vforce_op!(

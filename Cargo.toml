@@ -1,6 +1,12 @@
 [package]
 name = "vforce"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
+license = "Apache-2.0"
+description = "Safe no_std Rust bindings for VForce family of hardware-accelerated vectorized math functions in the Apple Accelerate framework on MacOS."
+
+keywords = ["accelerate", "simd", "vforce", "math", "macos"]
+categories = ["mathematics", "os::macos-apis", "no-std"]
+repository = "https://github.com/nrposner/vforce"
 
 [dependencies]

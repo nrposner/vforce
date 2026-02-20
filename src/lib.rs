@@ -1,6 +1,6 @@
+//! Safe Rust bindings for VForce family of hardware-accelerated transcendental vectorized math functions in the Apple Accelerate framework on MacOS.
 #![no_std]
 #![cfg(target_os = "macos")]
-//! Docs go here
 
 mod accelerate;
 

@@ -9,6 +9,8 @@ pub struct AccelerateComplex<T: Copy> {
 }
 
 impl<T: Copy> AccelerateComplex<T> {
+    /// Unpacks the complex number into its real and imaginary components, in that order, both either single or
+    /// double precision floats
     pub fn unpack(&self) -> (T, T) {
         (self.real, self.imaginary)
     }

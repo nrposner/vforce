@@ -315,9 +315,6 @@ impl_accelerate_float!(f32,
     vvsinhf, vvcoshf, vvtanhf, vvasinhf, vvacoshf, vvatanhf, vvsincosf, vvcosisinf
 );
 
-// todo:
-// check what accelerate does if we pass in count = 0
-
 macro_rules! binary_vforce_op {
     (
     $(#[$out_attr:meta])*

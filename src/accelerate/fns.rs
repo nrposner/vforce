@@ -1,4 +1,3 @@
-#![allow(clippy::doc_lazy_continuation)]
 #[cfg(target_os = "macos")]
 use crate::accelerate::AccelerateComplex;
 

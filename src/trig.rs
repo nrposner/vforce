@@ -106,16 +106,27 @@ binary_vforce_op!(
     /// The following special values of x and y produce the given value of z:
     ///
     /// y      |   x  |   result
+    ///
     /// +/-0   |  -0  |   +/-pi
+    ///
     /// +/-0   |  +0  |   +/-0
+    ///
     /// +/-0   |  <0  |   +/-pi
+    ///
     /// +/-0   |  >0  |   +/-0
-    ///  >0    | +/-0 |   +pi/2
+    ///
+    ///  \>0    | +/-0 |   +pi/2
+    ///
     ///  <0    | +/-0 |   -pi/2
+    ///
     /// +/-y   | -inf |   +/-pi
+    ///
     /// +/-y   | +inf |   +/-0
+    ///
     /// +/-inf |   x  |   +/-pi/2
+    ///
     /// +/-inf | -inf |   +/-3pi/4
+    ///
     /// +/-inf | +inf |   +/-pi/4
     atan2_array,
     /// Computes the two-argument arctangent atan2(y, x), overwriting `y` with the results.
@@ -124,16 +135,27 @@ binary_vforce_op!(
     /// The following special values of x and y produce the given value of z:
     ///
     /// y      |   x  |   result
+    ///
     /// +/-0   |  -0  |   +/-pi
+    ///
     /// +/-0   |  +0  |   +/-0
+    ///
     /// +/-0   |  <0  |   +/-pi
+    ///
     /// +/-0   |  >0  |   +/-0
-    ///  >0    | +/-0 |   +pi/2
+    ///
+    ///  \>0    | +/-0 |   +pi/2
+    ///
     ///  <0    | +/-0 |   -pi/2
+    ///
     /// +/-y   | -inf |   +/-pi
+    ///
     /// +/-y   | +inf |   +/-0
+    ///
     /// +/-inf |   x  |   +/-pi/2
+    ///
     /// +/-inf | -inf |   +/-3pi/4
+    ///
     /// +/-inf | +inf |   +/-pi/4
     atan2_array_in_place,
     accelerate_atan2, y, x);

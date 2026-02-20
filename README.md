@@ -1,6 +1,6 @@
 Safe no_std Rust bindings for the [VForce](https://developer.apple.com/documentation/accelerate/vforce-library?language=objc) family of hardware-accelerated vectorized math functions in the [Accelerate](https://developer.apple.com/documentation/accelerate?language=objc) framework on MacOS.
 
-Provide a safe API for VForce functions generic over single and double precision floats, with automatic chunking for very large arrays. 
+Provides a safe API for VForce functions generic over single and double precision floats, with automatic chunking for very large arrays. 
 
 ```rust
 use vforce::arithmetic::{pow_array, pow_array_in_place};

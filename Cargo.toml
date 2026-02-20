@@ -8,5 +8,3 @@ description = "Safe no_std Rust bindings for the VForce family of hardware-accel
 keywords = ["accelerate", "simd", "vforce", "math", "macos"]
 categories = ["mathematics", "os::macos-apis", "no-std"]
 repository = "https://github.com/nrposner/vforce"
-
-[dependencies]

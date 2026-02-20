@@ -11,18 +11,13 @@ use accelerate::{AccelerateComplex, fns::*};
 pub enum AccelerateError {
     /// Inputs and outputs are not all the same length
     LengthMismatch { expected: usize, got: usize },
-    /// We get an array that cannot be indexed by i32
-    Overflow
 }
 
 impl Display for AccelerateError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Overflow => {
-                write!(f, "AccelerateError::Overflow - vforce recieved an array that cannot be indexed by an i32: please use a shorter array")
-            },
             Self::LengthMismatch { expected, got } => {
-                write!(f, "AccelerateError::LengthMismatch - vforce recived arrays of different lengths: expected {} elements, got {} elements", expected, got)
+                write!(f, "AccelerateError::LengthMismatch - vforce received arrays of different lengths: expected {} elements, got {} elements", expected, got)
             }
         }
     }
@@ -335,16 +330,24 @@ macro_rules! binary_vforce_op {
         pub fn $name<AF: AccelerateFloat>(
             out: &mut [AF], $a_name: &[AF], $b_name: &[AF]
         ) -> Result<(), AccelerateError> {
-            let count = validate_lengths_2($a_name.len(), $b_name.len(), out.len())?;
-            unsafe { AF::$method(out.as_mut_ptr(), $a_name.as_ptr(), $b_name.as_ptr(), &count); }
+            check_lengths_2($a_name.len(), $b_name.len(), out.len())?;
+            for (out_chunk, (a_chunk, b_chunk)) in out.chunks_mut(CHUNK)
+                .zip($a_name.chunks(CHUNK).zip($b_name.chunks(CHUNK)))
+            {
+                let count = out_chunk.len() as i32;
+                unsafe { AF::$method(out_chunk.as_mut_ptr(), a_chunk.as_ptr(), b_chunk.as_ptr(), &count); }
+            }
             Ok(())
         }
         $(#[$in_place_attr])*
         pub fn $name_in_place<AF: AccelerateFloat>(
             $a_name: &mut [AF], $b_name: &[AF]
         ) -> Result<(), AccelerateError> {
-            let count = validate_lengths_1($a_name.len(), $b_name.len())?;
-            unsafe { AF::$method($a_name.as_mut_ptr(), $a_name.as_ptr(), $b_name.as_ptr(), &count); }
+            check_lengths_1($a_name.len(), $b_name.len())?;
+            for (a_chunk, b_chunk) in $a_name.chunks_mut(CHUNK).zip($b_name.chunks(CHUNK)) {
+                let count = a_chunk.len() as i32;
+                unsafe { AF::$method(a_chunk.as_mut_ptr(), a_chunk.as_ptr(), b_chunk.as_ptr(), &count); }
+            }
             Ok(())
         }
     };
@@ -363,39 +366,41 @@ macro_rules! unary_vforce_op {
         pub fn $name<AF: AccelerateFloat>(
             out: &mut [AF], $input_name: &[AF]
         ) -> Result<(), AccelerateError> {
-            let count = validate_lengths_1($input_name.len(), out.len())?;
-            unsafe { AF::$method(out.as_mut_ptr(), $input_name.as_ptr(), &count); }
+            check_lengths_1($input_name.len(), out.len())?;
+            for (out_chunk, in_chunk) in out.chunks_mut(CHUNK).zip($input_name.chunks(CHUNK)) {
+                let count = out_chunk.len() as i32;
+                unsafe { AF::$method(out_chunk.as_mut_ptr(), in_chunk.as_ptr(), &count); }
+            }
             Ok(())
         }
         $(#[$in_place_attr])*
         pub fn $name_in_place<AF: AccelerateFloat>(
             $input_name: &mut [AF]
-        ) -> Result<(), AccelerateError> {
-            let count: i32 = $input_name.len()
-                .try_into()
-                .map_err(|_| AccelerateError::Overflow)?;
-            unsafe { AF::$method($input_name.as_mut_ptr(), $input_name.as_ptr(), &count); }
-            Ok(())
+        ) {
+            for chunk in $input_name.chunks_mut(CHUNK) {
+                let count = chunk.len() as i32;
+                unsafe { AF::$method(chunk.as_mut_ptr(), chunk.as_ptr(), &count); }
+            }
         }
     };
 }
 
-fn validate_lengths_1(a: usize, b: usize) -> Result<i32, AccelerateError> {
-    let count: i32 = a.try_into().map_err(|_| AccelerateError::Overflow)?;
+const CHUNK: usize = i32::MAX as usize;
+
+fn check_lengths_1(a: usize, b: usize) -> Result<(), AccelerateError> {
     if a != b {
         return Err(AccelerateError::LengthMismatch { expected: a, got: b });
     }
-    Ok(count)
+    Ok(())
 }
-fn validate_lengths_2(a: usize, b: usize, c: usize) -> Result<i32, AccelerateError> {
-    let count: i32 = a.try_into().map_err(|_| AccelerateError::Overflow)?;
+fn check_lengths_2(a: usize, b: usize, c: usize) -> Result<(), AccelerateError> {
     if a != b {
         return Err(AccelerateError::LengthMismatch { expected: a, got: b });
     }
     if a != c {
         return Err(AccelerateError::LengthMismatch { expected: a, got: c });
     }
-    Ok(count)
+    Ok(())
 }
 
 
@@ -793,8 +798,14 @@ unary_vforce_op!(
 pub fn sincos_array<AF: AccelerateFloat>(
     sin_out: &mut [AF], cos_out: &mut [AF], input: &[AF]
 ) -> Result<(), AccelerateError> {
-    let count = validate_lengths_2(input.len(), sin_out.len(), cos_out.len())?;
-    unsafe { AF::accelerate_sincos(sin_out.as_mut_ptr(), cos_out.as_mut_ptr(), input.as_ptr(), &count); }
+    check_lengths_2(input.len(), sin_out.len(), cos_out.len())?;
+    for ((sin_chunk, cos_chunk), in_chunk) in sin_out.chunks_mut(CHUNK)
+        .zip(cos_out.chunks_mut(CHUNK))
+        .zip(input.chunks(CHUNK))
+    {
+        let count = in_chunk.len() as i32;
+        unsafe { AF::accelerate_sincos(sin_chunk.as_mut_ptr(), cos_chunk.as_mut_ptr(), in_chunk.as_ptr(), &count); }
+    }
     Ok(())
 }
 /// Computes the sine and cosine of each element simultaneously, writing the `sin` results into
@@ -802,8 +813,11 @@ pub fn sincos_array<AF: AccelerateFloat>(
 pub fn sincos_array_in_place_sin<AF: AccelerateFloat>(
     cos_out: &mut [AF], input: &mut [AF]
 ) -> Result<(), AccelerateError> {
-    let count = validate_lengths_1(input.len(), cos_out.len())?;
-    unsafe { AF::accelerate_sincos(input.as_mut_ptr(), cos_out.as_mut_ptr(), input.as_ptr(), &count); }
+    check_lengths_1(input.len(), cos_out.len())?;
+    for (in_chunk, cos_chunk) in input.chunks_mut(CHUNK).zip(cos_out.chunks_mut(CHUNK)) {
+        let count = in_chunk.len() as i32;
+        unsafe { AF::accelerate_sincos(in_chunk.as_mut_ptr(), cos_chunk.as_mut_ptr(), in_chunk.as_ptr(), &count); }
+    }
     Ok(())
 }
 
@@ -812,8 +826,11 @@ pub fn sincos_array_in_place_sin<AF: AccelerateFloat>(
 pub fn sincos_array_in_place_cos<AF: AccelerateFloat>(
     sin_out: &mut [AF], input: &mut [AF]
 ) -> Result<(), AccelerateError> {
-    let count = validate_lengths_1(input.len(), sin_out.len())?;
-    unsafe { AF::accelerate_sincos(sin_out.as_mut_ptr(), input.as_mut_ptr(), input.as_ptr(), &count); }
+    check_lengths_1(input.len(), sin_out.len())?;
+    for (in_chunk, sin_chunk) in input.chunks_mut(CHUNK).zip(sin_out.chunks_mut(CHUNK)) {
+        let count = in_chunk.len() as i32;
+        unsafe { AF::accelerate_sincos(sin_chunk.as_mut_ptr(), in_chunk.as_mut_ptr(), in_chunk.as_ptr(), &count); }
+    }
     Ok(())
 }
 
@@ -823,8 +840,11 @@ pub fn sincos_array_in_place_cos<AF: AccelerateFloat>(
 pub fn cosisin_array<AF: AccelerateFloat>(
     out: &mut [AccelerateComplex<AF>], input: &[AF]
 ) -> Result<(), AccelerateError> {
-    let count = validate_lengths_1(out.len(), input.len())?;
-    unsafe { AF::accelerate_cosisin(out.as_mut_ptr(), input.as_ptr(), &count); }
+    check_lengths_1(out.len(), input.len())?;
+    for (out_chunk, in_chunk) in out.chunks_mut(CHUNK).zip(input.chunks(CHUNK)) {
+        let count = in_chunk.len() as i32;
+        unsafe { AF::accelerate_cosisin(out_chunk.as_mut_ptr(), in_chunk.as_ptr(), &count); }
+    }
     Ok(())
 }
 
@@ -879,13 +899,13 @@ mod tests {
 
     // Helper to test a unary in-place function against a scalar reference
     fn check_unary_in_place(
-        vforce_fn: fn(&mut [f64]) -> Result<(), AccelerateError>,
+        vforce_fn: fn(&mut [f64]),
         scalar_fn: fn(f64) -> f64,
         inputs: &[f64],
         name: &str,
     ) {
         let mut buf: Vec<f64> = inputs.to_vec();
-        vforce_fn(&mut buf).unwrap();
+        vforce_fn(&mut buf);
         let expected: Vec<f64> = inputs.iter().map(|&x| scalar_fn(x)).collect();
         assert_approx(&buf, &expected, 1e-10, name);
     }
